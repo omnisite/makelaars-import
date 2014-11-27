@@ -12,6 +12,11 @@ class Import
 	 * @var object
 	 */
 	private $vendor;
+	/**
+	 * Objects for this import
+	 * @var array
+	 */
+	private $objects = [];
 
 	/**
 	 * Constructor
@@ -46,8 +51,12 @@ class Import
 
 		if ($contents) {
 			// parse xml
-			$this->parse($contents);
+			if (!$this->parse($contents)) {
+				return false;
+			}
 		}
+
+		return true;
 	}
 
 	private function retrieve()
@@ -98,7 +107,11 @@ class Import
 
 		return $contents;
 	}
-
+	/**
+	 * Parses feed using vendors own parse method
+	 * @param  string $contents
+	 * @return bool
+	 */
 	private function parse($contents)
 	{
 		$reader = new XML\Reader;
@@ -106,11 +119,47 @@ class Import
 		$output = $reader->parse();
 
 		$objects = $this->vendor->parse($output);
+		if ($objects) {
+			$this->objects = $objects;
+
+			return true;
+		}
+
+		return false;
+	}
+	/**
+	 * Gets all objects from this import
+	 * @return array
+	 */
+	public function getObjects()
+	{
+		return $this->objects;
 	}
 
-	// getObjects
-	// getUpdated
-	// getImportHash
-	//
-	// each object has its own hash for easy comparison
+	public function getUpdated($oldObjects)
+	{
+		$currentHashes = [];
+		foreach ($oldObjects as $oldObject) {
+			$currentHashes[$oldObject->tiaraId] = $oldObject->getHash();
+		}
+
+		$updated = [];
+		foreach ($this->objects as $object) {
+			$objectUpdated = false;
+			if (isset($currentHashes[$object->tiaraId]) && $currentHashes[$object->tiaraId] != $object->getHash()) {
+				$objectUpdated = true;
+				unset($currentHashes[$object->tiaraId]);
+
+			// new object
+			} else {
+				$objectUpdated = true;
+			}
+
+			if ($objectUpdated) {
+				$updated[] = $object;
+			}
+		}
+
+		return ['updated' => $updated, 'archived' => array_keys($currentHashes)];
+	}
 }

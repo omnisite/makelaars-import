@@ -3,6 +3,7 @@
 namespace MakelaarsImport\Vendor;
 
 use MakelaarsImport\Object;
+use MakelaarsImport\Media;
 
 class Realworks extends \MakelaarsImport\Vendor
 {
@@ -110,15 +111,32 @@ class Realworks extends \MakelaarsImport\Vendor
 
 		foreach ($parser['value'] as $pObject) {
 			$object = new Object;
-			// var_dump($pObject);
+			// set hash, used for comparing to object
+			$object->setHash($pObject);
 			foreach ($pObject as $data) {
 				if (is_array($data) && $data) {
-					$attributes = $this->searchForAttributes($data);
+					$attributes = $this->searchForAttributes($data, $this->map);
+
+					// get media
+					$mediaList = $this->searchForAttributes($data, ['media' => 'MediaLijst']);
+					if ($mediaList) {
+						$media = [];
+						foreach ($mediaList['media'] as $mediaElement) {
+							$mediaAttributes = $this->searchForAttributes([$mediaElement], [
+								'type' => 'Groep',
+								'raw_url' => 'URL',
+								'datum_wijziging' => 'LaatsteWijziging',
+							]);
+							$mediaObject = new Media($mediaAttributes);
+							$media[] = $mediaObject;
+						}
+
+						$attributes['media'] = $media;
+					}
 				}
 			}
 
 			$object->fill($attributes);
-			var_dump($object);
 
 			// add object to objects array
 			$objects[] = $object;
@@ -127,26 +145,25 @@ class Realworks extends \MakelaarsImport\Vendor
 		return $objects;
 	}
 
-	private function searchForAttributes($data)
+	private function searchForAttributes($data, $map)
 	{
 		$attributes = [];
 		foreach($data as $element) {
-			// var_dump($element);
-			if ($attribute = $this->inMap($element['name'])) {
+			if ($attribute = $this->inMap($element['name'], $map)) {
 				$attributes[$attribute] = $element['value'];
 			}
 
 			if (is_array($element['value'])) {
-				$attributes = array_merge($attributes, $this->searchForAttributes($element['value']));
+				$attributes = array_merge($attributes, $this->searchForAttributes($element['value'], $map));
 			}
 		}
-// var_dump($attributes);
+
 		return $attributes;
 	}
 
-	private function inMap($elementName)
+	private function inMap($elementName, $map)
 	{
-		if ($k = array_search(preg_replace('/\{.*\}/', '', $elementName), $this->map)) {
+		if ($k = array_search(preg_replace('/\{.*\}/', '', $elementName), $map)) {
 			return $k;
 		}
 	}

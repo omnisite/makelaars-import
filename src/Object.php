@@ -24,5 +24,18 @@ class Object extends Model
 		'datum_wijziging',
 		'bouwvorm',
 		'tekst',
+		'media',
 	];
+
+	private $hash;
+
+	public function setHash($rawObject)
+	{
+		$this->hash = sha1(json_encode($rawObject));
+	}
+
+	public function getHash()
+	{
+		return $this->hash;
+	}
 }
