@@ -140,15 +140,15 @@ class Import
 	{
 		$currentHashes = [];
 		foreach ($oldObjects as $oldObject) {
-			$currentHashes[$oldObject->tiaraId] = $oldObject->getHash();
+			$currentHashes[$oldObject->vendorId] = $oldObject->getHash();
 		}
 
 		$updated = [];
 		foreach ($this->objects as $object) {
 			$objectUpdated = false;
-			if (isset($currentHashes[$object->tiaraId]) && $currentHashes[$object->tiaraId] != $object->getHash()) {
+			if (isset($currentHashes[$object->vendorId]) && $currentHashes[$object->vendorId] != $object->getHash()) {
 				$objectUpdated = true;
-				unset($currentHashes[$object->tiaraId]);
+				unset($currentHashes[$object->vendorId]);
 
 			// new object
 			} else {

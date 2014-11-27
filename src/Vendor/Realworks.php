@@ -34,6 +34,7 @@ class Realworks extends \MakelaarsImport\Vendor
 	private $og = 'WONEN';
 
 	private $map = [
+		'vendorId' => 'ObjectCode',
 		'tiaraId' => 'ObjectTiaraID',
 		'prijs' => 'Koopprijs',
 		'prijs_conditie' => 'KoopConditie',
