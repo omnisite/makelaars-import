@@ -3,7 +3,7 @@
 namespace MakelaarsImport;
 
 use GuzzleHttp\Client;
-use Sabre\XML;
+// use Sabre\XML;
 
 class Import
 {
@@ -114,11 +114,12 @@ class Import
 	 */
 	private function parse($contents)
 	{
-		$reader = new XML\Reader;
-		$reader->xml($contents);
-		$output = $reader->parse();
+		// $reader = new XML\Reader;
+		// $reader->xml($contents);
+		// $output = $reader->parse();
 
-		$objects = $this->vendor->parse($output);
+		// $objects = $this->vendor->parse($output);
+		$objects = $this->vendor->parse(new \SimpleXMLElement($contents));
 		if ($objects) {
 			$this->objects = $objects;
 
@@ -140,15 +141,19 @@ class Import
 	{
 		$currentHashes = [];
 		foreach ($oldObjects as $oldObject) {
-			$currentHashes[$oldObject->vendorId] = $oldObject->getHash();
+			$currentHashes[$oldObject->vendor_id] = $oldObject->hash;
 		}
 
 		$updated = [];
 		foreach ($this->objects as $object) {
 			$objectUpdated = false;
-			if (isset($currentHashes[$object->vendorId]) && $currentHashes[$object->vendorId] != $object->getHash()) {
-				$objectUpdated = true;
-				unset($currentHashes[$object->vendorId]);
+			if (isset($currentHashes[$object->vendor_id])) {
+				if ($currentHashes[$object->vendor_id] != $object->getHash()) {
+					$objectUpdated = true;
+				}
+
+				// unset so that we can keep track of archived objects
+				unset($currentHashes[$object->vendor_id]);
 
 			// new object
 			} else {

@@ -9,7 +9,9 @@ class Object extends Model
 	 * @var array
 	 */
 	protected $fillable = [
-		'tiaraId',
+		'vendor_id',
+		'tiara_id',
+		'prijs_type',
 		'prijs',
 		'prijs_conditie',
 		'prijs_voorvoegsel',
@@ -18,12 +20,13 @@ class Object extends Model
 		'postcode',
 		'woonplaats',
 		'land',
-		'type',
-		'beschikbaarheid',
+		'woning_type',
+		'status',
 		'datum_aanmelding',
 		'datum_wijziging',
 		'bouwvorm',
 		'tekst',
+		'wonen',
 		'media',
 	];
 
