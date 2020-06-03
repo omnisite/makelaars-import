@@ -11,7 +11,7 @@ class Demo extends \MakelaarsImport\Vendor
 
 	public function getUrl()
 	{
-		return 'http://agterdenbosch.nl/Objecten_20141118.zip';
+		return '';
 	}
 
 	public function parse($parser)

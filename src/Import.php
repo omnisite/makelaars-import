@@ -3,13 +3,13 @@
 namespace MakelaarsImport;
 
 use GuzzleHttp\Client;
-// use Sabre\XML;
+use Psr\Http\Message\MessageInterface;
 
 class Import
 {
 	/**
 	 * Vendor object
-	 * @var object
+	 * @var WoonObject
 	 */
 	private $vendor;
 	/**
@@ -62,11 +62,12 @@ class Import
 	private function retrieve()
 	{
 		$client = new Client();
-		$response = $client->get($this->vendor->getUrl());
+        /** @var MessageInterface $response */
+        $response = $client->request('GET', $this->vendor->getUrl());
 
 		$body = $response->getBody();
 		// if zip, extract it and retrieve contents
-		if ('application/zip' == $response->getHeader('Content-Type')) {
+		if (in_array($response->getHeaderLine('Content-Type'), ['application/zip', 'application/x-zip;charset=utf-8'])) {
 			$tmpFile = tmpfile();
 			fwrite($tmpFile, $body->getContents());
 

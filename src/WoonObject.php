@@ -2,7 +2,7 @@
 
 namespace MakelaarsImport;
 
-class Object extends Model
+class WoonObject extends Model
 {
 	/**
 	 * Fillable attributes
@@ -26,6 +26,7 @@ class Object extends Model
 		'datum_wijziging',
 		'bouwvorm',
 		'tekst',
+		'korte_omschrijving',
 		'wonen',
 		'media',
 	];

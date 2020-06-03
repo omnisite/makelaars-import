@@ -34,12 +34,24 @@ class Model implements \ArrayAccess
 	}
 
 	public function has($key) {
-		if ($this->{$key}) {
+		if (isset($this->{$key}) && $this->{$key}) {
 			return true;
 		}
 
 		return false;
 	}
+
+    public function toArray()
+    {
+        $values = [];
+        foreach ($this->fillable as $fillableKey) {
+            if ($this->has($fillableKey)) {
+                $values[$fillableKey] = $this->get($fillableKey);
+            }
+        }
+
+        return $values;
+    }
 
 	/**
      * Alias method for get().
@@ -48,7 +60,11 @@ class Model implements \ArrayAccess
      * @return mixed
      */
     public function offsetGet($key) {
-        return $this->get($key);
+        if ($this->isFillable($key)) {
+            return $this->get($key);
+        }
+
+        return;
     }
     /**
      * Alias method for set().

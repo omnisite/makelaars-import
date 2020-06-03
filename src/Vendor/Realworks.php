@@ -2,7 +2,7 @@
 
 namespace MakelaarsImport\Vendor;
 
-use MakelaarsImport\Object;
+use MakelaarsImport\WoonObject;
 use MakelaarsImport\Media;
 use MakelaarsImport\Wonen;
 
@@ -33,24 +33,6 @@ class Realworks extends \MakelaarsImport\Vendor
 	 * @var string
 	 */
 	private $og = 'WONEN';
-
-	private $map = [
-		'vendor_id' => 'ObjectCode',
-		'tiara_id' => 'ObjectTiaraID',
-		'prijs' => 'Koopprijs',
-		'prijs_conditie' => 'KoopConditie',
-		'prijs_voorvoegsel' => 'Prijsvoorvoegsel',
-		'straatnaam' => 'Straatnaam',
-		'huisnummer' => 'Huisnummer',
-		'postcode' => 'Postcode',
-		'woonplaats' => 'Woonplaats',
-		'land' => 'Land',
-		'status' => 'Status',
-		'datum_aanmelding' => 'DatumInvoer',
-		'datum_wijziging' => 'DatumWijziging',
-		'bouwvorm' => 'Bouwvorm',
-		'tekst' => 'Aanbiedingstekst',
-	];
 
 	/**
 	 * Constructor
@@ -118,9 +100,9 @@ class Realworks extends \MakelaarsImport\Vendor
 			$prijsType = $details->Huur ? 'huur' : 'koop';
 			$prijsObject = $details->{ucfirst($prijsType)};
 
-			$woningType = $details->Appartement ? 'appartement' : 'woonhuis';
+			$woningType = $pObject->Wonen->Appartement ? 'appartement' : 'woonhuis';
 
-			$object = new Object([
+			$object = new WoonObject([
 				'vendor_id' => (string) $pObject->ObjectCode,
 				'tiara_id' => (string) $pObject->ObjectTiaraID,
 				'prijs_type' => (string) $prijsType,
@@ -138,6 +120,7 @@ class Realworks extends \MakelaarsImport\Vendor
 				'datum_wijziging' => (string) $details->DatumWijziging,
 				'bouwvorm' => (string) $details->Bouwvorm,
 				'tekst' => (string) $details->Aanbiedingstekst,
+				'korte_omschrijving' => (string) $pObject->Web->KorteOmschrijving,
 			]);
 
 			// set hash, used for comparing object
@@ -145,14 +128,56 @@ class Realworks extends \MakelaarsImport\Vendor
 
 			// find wonen
 			$wonen = $pObject->Wonen;
-			$object['wonen'] = new Wonen([
+
+			$ruimten = isset($wonen->Woonlagen->BeganeGrondOfFlat->OverigeRuimten->OverigeRuimte) ? (array) $wonen->Woonlagen->BeganeGrondOfFlat->OverigeRuimten->OverigeRuimte : [];
+
+			$hasTuin = ('geen tuin' != (string) $wonen->WonenDetails->Tuin->Tuintypen->Tuintype) ? true : false;
+			$hasGarage = ('geen garage' != (string) $wonen->WonenDetails->Garage->Soorten->Soort) ? true : false;
+			$hasBalkon = (bool) in_array('balkon', array_map(function($ruimte) {
+				return 	$ruimte;
+			}, $ruimten));
+			$wonenValues = [
 				'woon_oppervlakte' => (string) $wonen->WonenDetails->MatenEnLigging->GebruiksoppervlakteWoonfunctie,
+				'perceel_oppervlakte' => (string) $wonen->WonenDetails->MatenEnLigging->PerceelOppervlakte,
 				'inhoud' => (string) $wonen->WonenDetails->MatenEnLigging->Inhoud,
 				'aantal_verdiepingen' => (string) $wonen->Verdiepingen->Aantal,
 				'kamers' => (string) $wonen->Verdiepingen->AantalKamers,
 				'slaapkamers' => (string) $wonen->Verdiepingen->AantalSlaapKamers,
 				'zonligging' => (string) $wonen->WonenDetails->Hoofdtuin->Positie,
-			]);
+				'bouwjaar' => (string) $wonen->WonenDetails->Bouwjaar->JaarOmschrijving->Jaar,
+				'onderhoud_binnen' => (string) $wonen->WonenDetails->Onderhoud->Binnen->Waardering,
+				'onderhoud_buiten' => (string) $wonen->WonenDetails->Onderhoud->Buiten->Waardering,
+				'has_tuin' => $hasTuin,
+				'has_balkon' => $hasBalkon,
+				'has_garage' => $hasGarage,
+				'has_zolder' => (bool) $wonen->Woonlagen->Zolder,
+			];
+
+			if ('woonhuis' == $woningType) {
+				$wonenValues['woning_soort'] = (string) $wonen->{ucfirst($woningType)}->SoortWoning;
+				$wonenValues['woning_type'] = (string) $wonen->{ucfirst($woningType)}->TypeWoning;
+			} elseif ('appartement' == $woningType) {
+				$wonenValues['woning_soort'] = (string) $wonen->{ucfirst($woningType)}->SoortAppartement;
+				$wonenValues['open_portiek'] = (string) $wonen->{ucfirst($woningType)}->OpenPortiek;
+				$wonenValues['woning_woonlaag'] = (string) $wonen->{ucfirst($woningType)}->Woonlaag;
+			}
+
+			if ($wonenValues['has_tuin']) {
+				if ($wonen->WonenDetails->Hoofdtuin) {
+					$wonenValues['hoofdtuin_type'] = (string) $wonen->WonenDetails->Hoofdtuin->Type;
+					$wonenValues['hoofdtuin_afmetingen'] = (string) $wonen->WonenDetails->Hoofdtuin->Afmetingen->Lengte . 'x' . (string) $wonen->WonenDetails->Hoofdtuin->Afmetingen->Breedte;
+					$wonenValues['hoofdtuin_oppervlakte'] = (string) $wonen->WonenDetails->Hoofdtuin->Afmetingen->Oppervlakte;
+				} else {
+					$tuintype = (string) $wonen->WonenDetails->Tuin->Tuintypen->Tuintype;
+					if (in_array($tuintype, ['zonneterras'])) {
+						$wonenValues['hoofdtuin_type'] = (string) $wonen->WonenDetails->Hoofdtuin->Type;
+						$wonenValues['has_tuin'] = false;
+						$wonenValues['has_balkon'] = true;
+					}
+				}
+			}
+
+			$object['wonen'] = new Wonen($wonenValues);
 
 			// find media
 			foreach ($pObject->MediaLijst->Media as $mediaItem) {
@@ -164,78 +189,11 @@ class Realworks extends \MakelaarsImport\Vendor
 
 				$object->media[] = $media;
 			}
-			
-			// foreach ($pObject as $data) {
-			// 	if (is_array($data) && $data) {
-			// 		$attributes = $this->searchForAttributes($data, $this->map);
-
-			// 		// determine type
-			// 		if ($this->searchForAttributes($data, ['appartement' => 'Appartement'])) {
-			// 			$attributes['type'] = 'appartement';
-			// 		} else if ($this->searchForAttributes($data, ['appartement' => 'Woonhuis'])) {
-			// 			$attributes['type'] = 'woonhuis';
-			// 		}
-
-			// 		$wonen = $this->searchForAttributes($data, [
-			// 			'oppervlakte' => 'GebruiksoppervlakteWoonfunctie',
-			// 			'kamers' => 'Verdiepingen:AantalKamers',
-			// 			'slaapkamers' => 'Verdiepingen:AantalSlaapkamers',
-			// 			'zonligging' => 'Positie',
-			// 		]);
-			// 		$attributes['wonen'] = new Wonen($wonen);
-
-			// 		// get media
-			// 		$mediaList = $this->searchForAttributes($data, ['media' => 'MediaLijst']);
-			// 		if ($mediaList) {
-			// 			$media = [];
-			// 			foreach ($mediaList['media'] as $mediaElement) {
-			// 				$mediaAttributes = $this->searchForAttributes([$mediaElement], [
-			// 					'type' => 'Groep',
-			// 					'raw_url' => 'URL',
-			// 					'datum_wijziging' => 'LaatsteWijziging',
-			// 				]);
-			// 				$mediaObject = new Media($mediaAttributes);
-			// 				$media[] = $mediaObject;
-			// 			}
-
-			// 			$attributes['media'] = $media;
-			// 		}
-			// 	}
-			// }
 
 			// add object to objects array
 			$objects[] = $object;
 		}
 
 		return $objects;
-	}
-
-	private function searchForAttributes($data, $map)
-	{
-		// foreach ($map as $k => $element) {
-		// 	if (preg_match('/:/', &$element)) {
-		// 		$element = explode(':', $element);
-		// 	}
-		// }
-
-		$attributes = [];
-		foreach($data as $element) {
-			if ($attribute = $this->inMap($element['name'], $map)) {
-				$attributes[$attribute] = $element['value'];
-			}
-
-			if (is_array($element['value'])) {
-				$attributes = array_merge($attributes, $this->searchForAttributes($element['value'], $map));
-			}
-		}
-
-		return $attributes;
-	}
-
-	private function inMap($elementName, $map)
-	{
-		if ($k = array_search(preg_replace('/\{.*\}/', '', $elementName), $map)) {
-			return $k;
-		}
 	}
 }
