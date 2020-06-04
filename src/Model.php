@@ -1,6 +1,6 @@
 <?php
 
-namespace Makelaarsimport;
+namespace MakelaarsImport;
 
 class Model implements \ArrayAccess
 {
