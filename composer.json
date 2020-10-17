@@ -1,25 +1,25 @@
 {
-    "name": "dennisenderink/makelaars-import",
-    "description": "Makelaars import component",
-    "authors": [
-        {
-            "name": "Dennis Enderink",
-            "email": "dennis@stayhungry.nl"
-        }
-    ],
-    "autoload": {
-        "psr-4": {
-            "MakelaarsImport\\": "src/"
-        }
-    },
-     "autoload-dev": {
-        "psr-4": {
-            "MakelaarsImport\\Tests\\": "tests/"
-        }
-    },
-    "require": {
-        "php": ">=7.1",
-        "guzzlehttp/guzzle": "~6.5",
-        "sabre/xml": "~2.2"
-    }
+	"name": "dennisenderink/makelaars-import",
+	"description": "Makelaars import component",
+	"authors": [
+		{
+			"name": "Dennis Enderink",
+			"email": "dennis@stayhungry.nl"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"MakelaarsImport\\": "src/"
+		}
+	},
+	 "autoload-dev": {
+		"psr-4": {
+			"MakelaarsImport\\Tests\\": "tests/"
+		}
+	},
+	"require": {
+		"php": ">=7.1",
+		"guzzlehttp/guzzle": "~6.5",
+		"sabre/xml": "~2.2"
+	}
 }

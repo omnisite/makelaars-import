@@ -24,7 +24,7 @@ class Model implements \ArrayAccess
 	}
 
 	public function get($key) {
-        return $this->{$key};
+		return $this->{$key};
 	}
 
 	public function set($key, $value) {
@@ -41,55 +41,55 @@ class Model implements \ArrayAccess
 		return false;
 	}
 
-    public function toArray()
-    {
-        $values = [];
-        foreach ($this->fillable as $fillableKey) {
-            if ($this->has($fillableKey)) {
-                $values[$fillableKey] = $this->get($fillableKey);
-            }
-        }
+	public function toArray()
+	{
+		$values = [];
+		foreach ($this->fillable as $fillableKey) {
+			if ($this->has($fillableKey)) {
+				$values[$fillableKey] = $this->get($fillableKey);
+			}
+		}
 
-        return $values;
-    }
+		return $values;
+	}
 
 	/**
-     * Alias method for get().
-     *
-     * @param string $key
-     * @return mixed
-     */
-    public function offsetGet($key) {
-        if ($this->isFillable($key)) {
-            return $this->get($key);
-        }
+	 * Alias method for get().
+	 *
+	 * @param string $key
+	 * @return mixed
+	 */
+	public function offsetGet($key) {
+		if ($this->isFillable($key)) {
+			return $this->get($key);
+		}
 
-        return;
-    }
-    /**
-     * Alias method for set().
-     *
-     * @param string $key
-     * @param mixed $value
-     */
-    public function offsetSet($key, $value) {
-        $this->set($key, $value);
-    }
-    /**
-     * Alias method for has().
-     *
-     * @param string $key
-     * @return bool
-     */
-    public function offsetExists($key) {
-        return $this->has($key);
-    }
-    /**
-     * Alias method for remove().
-     *
-     * @param string $key
-     */
-    public function offsetUnset($key) {
-        $this->remove($key);
-    }
+		return;
+	}
+	/**
+	 * Alias method for set().
+	 *
+	 * @param string $key
+	 * @param mixed $value
+	 */
+	public function offsetSet($key, $value) {
+		$this->set($key, $value);
+	}
+	/**
+	 * Alias method for has().
+	 *
+	 * @param string $key
+	 * @return bool
+	 */
+	public function offsetExists($key) {
+		return $this->has($key);
+	}
+	/**
+	 * Alias method for remove().
+	 *
+	 * @param string $key
+	 */
+	public function offsetUnset($key) {
+		$this->remove($key);
+	}
 }

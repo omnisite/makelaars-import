@@ -62,8 +62,8 @@ class Import
 	private function retrieve()
 	{
 		$client = new Client();
-        /** @var MessageInterface $response */
-        $response = $client->request('GET', $this->vendor->getUrl());
+		/** @var MessageInterface $response */
+		$response = $client->request('GET', $this->vendor->getUrl());
 
 		$body = $response->getBody();
 		// if zip, extract it and retrieve contents
